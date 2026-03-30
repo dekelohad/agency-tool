@@ -6,6 +6,7 @@
 | Framework | Next.js 14 (App Router) | SSR + API routes in one repo, easy Vercel deploy |
 | Styling | Tailwind CSS | Rapid UI, no style conflicts |
 | Components | shadcn/ui | Unstyled accessible components, works with Tailwind |
+| Design Quality | impeccable.style | AI design skill package — commands like `/polish`, `/audit`, `/typeset` for high-quality UI output |
 | Charts | Recharts | Lightweight, composable — needed for CRM dashboard |
 | Data Fetching | TanStack Query | Cache + background refresh for live call data |
 | Forms | React Hook Form + Zod | Validation with type safety |
@@ -64,3 +65,6 @@ Consistent structured output via tool_use, strong reasoning for billable classif
 
 **Why Deepgram over Whisper?**
 Real-time streaming transcription, better phone-call audio models, ~10x faster than Whisper for batch. Whisper (via OpenAI API) is the fallback.
+
+**Why impeccable.style?**
+Adds structured design commands to AI assistants (Claude Code, Cursor, etc.) so UI output is consistently polished. Install once with `npx skills add pbakaus/impeccable`, then use `/polish`, `/audit`, `/typeset`, `/overdrive` etc. during development to enforce design quality across all modules.
