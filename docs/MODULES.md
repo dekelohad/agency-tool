@@ -1,78 +1,6 @@
 # Module Specs
 
-Build order: A → B → E → C → D
-
----
-
-## Module A — Amazon Product Analyzer
-
-### Inputs
-- Keyword (e.g. "posture corrector")
-- Category (e.g. "Home & Kitchen")
-- Amazon URL / ASIN (optional override)
-
-### Data Collection
-- Fetch top products via Rainforest API (sort: relevance + review count)
-- Extract: name, price, rating, review count, BSR, review velocity
-- Pull only 1–3 star reviews (negative signal only)
-- Pull Q&A section (often reveals problems buyers don't put in reviews)
-
-### AI Analysis (Claude)
-Prompt receives batched reviews. Returns structured JSON:
-
-```
-{
-  clusters: [
-    {
-      theme: string,
-      frequency_pct: number,
-      intensity: "high" | "medium" | "low",
-      sentiment_score: number,       // -1.0 to 1.0
-      sample_quotes: string[],
-      root_cause: string,
-      expectation_gap: string,       // expected X, got Y
-      opportunity: string            // how a better product addresses this
-    }
-  ]
-}
-```
-
-### Output
-- Top problem clusters ranked by frequency × intensity
-- Expectation gap report per cluster
-- Product opportunity ideas
-- Cross-product patterns (if multiple ASINs analyzed)
-
-### Key Implementation Notes
-- Use Rainforest API `type=reviews` with `star_rating=critical` filter
-- Batch reviews in chunks of 50 before sending to Claude (stay under context limits)
-- Cache Rainforest results for 24h to avoid redundant API calls
-- Store review velocity = (reviews in last 30 days) / 30
-
----
-
-## Module B — Reddit Problem Miner
-
-### Inputs
-- Subreddit(s) or topic
-- Keywords (optional filter)
-
-### Data Collection
-- Pull posts + top comments via Reddit API (snoowrap)
-- Also check: Quora, YouTube comments, Trustpilot/G2 (manual import or scrape)
-- Focus on: complaints, frustrations, "I wish there was", "why doesn't X exist"
-- Weight signals by upvote count (high-upvote complaints = validated pain)
-
-### AI Analysis (Claude)
-Same cluster schema as Module A (`source = 'reddit'`).
-
-Additional signals to extract:
-- "I wish there was…" phrases → product gap signals
-- Trend direction: is this complaint growing or shrinking?
-- Emotional intensity: frustration vs. rage vs. mild annoyance
-
-### Output
-Same as Module A — feeds into `problem_clusters` table, shared with Module D.
+Build order: C → D → E
 
 ---
 
@@ -118,7 +46,7 @@ For each ad, extract via Claude:
 ### Inputs
 - Niche OR product
 - Target audience description
-- Problem clusters (selected from Module A/B output)
+- Problem clusters (selected from Module C output or manual input)
 
 ### Ad Generation (Claude)
 For each problem cluster, generate:

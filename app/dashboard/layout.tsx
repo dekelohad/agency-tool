@@ -4,8 +4,6 @@ import { createSupabaseServerClient } from '@/lib/db/server'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
-  { href: '/dashboard/amazon', label: 'Amazon Analyzer', letter: 'A' },
-  { href: '/dashboard/reddit', label: 'Reddit Miner', letter: 'B' },
   { href: '/dashboard/ads-intel', label: 'Ads Intelligence', letter: 'C' },
   { href: '/dashboard/creative', label: 'Creative Factory', letter: 'D' },
   { href: '/dashboard/crm', label: 'Pay-Per-Call CRM', letter: 'E' },

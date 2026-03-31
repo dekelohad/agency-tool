@@ -43,7 +43,7 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/dashboard/amazon')
+    router.push('/dashboard/crm')
     router.refresh()
   }
 

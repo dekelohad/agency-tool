@@ -3,7 +3,7 @@
 ## Frontend
 | Layer | Choice | Why |
 |---|---|---|
-| Framework | Next.js 14 (App Router) | SSR + API routes in one repo, easy Vercel deploy |
+| Framework | Next.js (App Router) | SSR + API routes in one repo, easy Vercel deploy |
 | Styling | Tailwind CSS | Rapid UI, no style conflicts |
 | Components | shadcn/ui | Unstyled accessible components, works with Tailwind |
 | Design Quality | impeccable.style | AI design skill package — commands like `/polish`, `/audit`, `/typeset` for high-quality UI output |
@@ -15,8 +15,7 @@
 | Layer | Choice | Why |
 |---|---|---|
 | Runtime | Next.js API Routes | Co-located with frontend, no extra server |
-| Job Queue | BullMQ + Redis (Upstash) | Long-running jobs (scraping, AI analysis) off the request cycle |
-| Cron | Vercel Cron or BullMQ repeat | Scheduled re-runs (e.g. daily Amazon refresh) |
+| Job Queue | BullMQ + Redis (Upstash) | Long-running jobs (transcription, AI classification) off the request cycle |
 
 ## Database & Auth
 | Layer | Choice | Why |
@@ -30,16 +29,13 @@
 | Layer | Choice | Why |
 |---|---|---|
 | LLM | Anthropic Claude (claude-sonnet-4-6) | Best for structured output extraction + classification |
-| Transcription | Deepgram (or OpenAI Whisper) | Deepgram = faster + cheaper at scale; Whisper = fallback |
-| Embeddings | OpenAI text-embedding-3-small | For clustering review/reddit problems semantically |
+| Transcription | Deepgram | Faster + cheaper at scale; optimized for phone-call audio |
 
 ## External Integrations
 | Service | Module | Purpose |
 |---|---|---|
 | Twilio | Module E | Inbound call tracking, recording, webhooks |
-| Rainforest API | Module A | Amazon product + review data (reliable, no scraping) |
-| Reddit API (snoowrap) | Module B | Pull posts + comments |
-| Facebook Ads Library | Module C | Competitor ad research (unofficial scrape or manual import) |
+| Facebook Ads Library | Module C | Competitor ad research (scrape or manual import) |
 | Google Search API (SerpAPI) | Module C | Google ads SERP data, keyword research |
 
 ## DevOps
@@ -57,14 +53,11 @@
 **Why not a separate Express backend?**
 Next.js API routes handle everything at this scale. If job processing gets heavy, move to a dedicated worker on Railway/Render — the queue interface stays the same.
 
-**Why Rainforest API instead of scraping Amazon?**
-Amazon aggressively blocks scrapers. Rainforest is a paid API (~$50/mo) but saves weeks of anti-bot engineering. Playwright scraping is available as a fallback for early prototyping.
-
 **Why Claude for all AI tasks?**
 Consistent structured output via tool_use, strong reasoning for billable classification, handles long transcripts well. Single vendor = simpler billing + debugging.
 
 **Why Deepgram over Whisper?**
-Real-time streaming transcription, better phone-call audio models, ~10x faster than Whisper for batch. Whisper (via OpenAI API) is the fallback.
+Real-time streaming transcription, better phone-call audio models, ~10x faster than Whisper for batch.
 
 **Why impeccable.style?**
 Adds structured design commands to AI assistants (Claude Code, Cursor, etc.) so UI output is consistently polished. Install once with `npx skills add pbakaus/impeccable`, then use `/polish`, `/audit`, `/typeset`, `/overdrive` etc. during development to enforce design quality across all modules.

@@ -5,50 +5,29 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        Next.js App                          │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │ Module A │  │ Module B │  │ Module C │  │ Module D │   │
-│  │ Amazon   │  │ Reddit   │  │ Ads Intel│  │ Creative │   │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘   │
-│       └──────────────┴──────────────┴──────────────┘        │
-│                           │                                  │
-│                    ┌──────▼──────┐                          │
-│                    │  Module E   │                          │
-│                    │  PPC CRM    │                          │
-│                    └─────────────┘                          │
+│  ┌──────────────────┐  ┌──────────┐  ┌──────────────────┐  │
+│  │    Module C      │  │ Module D │  │    Module E      │  │
+│  │  Ads Intelligence│  │ Creative │  │  Pay-Per-Call CRM│  │
+│  └────────┬─────────┘  └────┬─────┘  └────────┬─────────┘  │
+│           └─────────────────┴─────────────────-┘            │
+│                              │                               │
+│                    ┌─────────▼──────┐                       │
+│                    │  Supabase DB   │                       │
+│                    └────────────────┘                       │
 └─────────────────────────────────────────────────────────────┘
          │                    │                    │
    ┌─────▼─────┐       ┌──────▼─────┐      ┌──────▼─────┐
    │ Supabase  │       │  BullMQ /  │      │  External  │
    │ Postgres  │       │  Redis     │      │  APIs      │
    │ Auth      │       │  Job Queue │      │  Twilio    │
-   │ Storage   │       └────────────┘      │  Rainforest│
-   │ Realtime  │                           │  Reddit    │
-   └───────────┘                           │  SerpAPI   │
-                                           └────────────┘
+   │ Storage   │       └────────────┘      │  SerpAPI   │
+   │ Realtime  │                           │  Deepgram  │
+   └───────────┘                           └────────────┘
 ```
 
 ---
 
 ## Data Flow
-
-### Research → Ads Pipeline
-```
-[Module A] Amazon keyword
-    → Rainforest API → top products + 1-3★ reviews
-    → Claude: cluster problems, extract themes, score sentiment
-    → Store: problem_clusters table
-
-[Module B] Reddit subreddit/keyword
-    → Reddit API → posts + comments
-    → Claude: extract complaints, emotional signals, "I wish" signals
-    → Store: problem_clusters table (same schema, source = reddit)
-
-[Module D] Creative Factory
-    → Reads problem_clusters
-    → Claude: generate hooks, ad copy, UGC scripts, image concepts
-    → Store: ads table
-    → Output: ready-to-run creatives + A/B test plan
-```
 
 ### Call Tracking Pipeline
 ```
@@ -70,16 +49,28 @@
     → Trigger: Realtime update → CRM dashboard
 ```
 
+### Ads Pipeline
+```
+[Module C] Ads Intelligence
+    → SerpAPI: keyword research + competitor ads
+    → Claude: extract hooks, offer structure, angles
+    → Store: market_keywords, competitor_ads tables
+
+[Module D] Creative Factory
+    → Reads competitor_ads + manual problem input
+    → Claude: generate hooks, ad copy, UGC scripts
+    → Store: ads table
+    → Output: ready-to-run creatives + A/B test plan
+```
+
 ---
 
 ## Module Boundaries
 
 | Module | Owns | Reads From |
 |---|---|---|
-| A — Amazon | products, amazon_reviews, problem_clusters (source=amazon) | — |
-| B — Reddit | reddit_posts, problem_clusters (source=reddit) | — |
 | C — Ads Intel | market_keywords, competitor_ads | — |
-| D — Creative | ads, creative_briefs | problem_clusters (A+B) |
+| D — Creative | ads, creative_briefs | competitor_ads (C) |
 | E — CRM | calls, transcripts, classifications, clients | ads (campaign attribution) |
 
 ---
@@ -98,7 +89,7 @@ API Route → enqueue job → return { jobId }
          ┌────┴────────────────────┐
          │                         │
     AI Analysis              Data Fetch
-    (Claude API)          (Rainforest/Reddit)
+    (Claude API)           (Deepgram/SerpAPI)
          │                         │
          └────────┬────────────────┘
                   │
@@ -110,8 +101,6 @@ API Route → enqueue job → return { jobId }
 ```
 
 Job types:
-- `amazon.analyze` — fetch + AI analysis for a keyword
-- `reddit.mine` — pull + AI analysis for a subreddit/topic
 - `call.transcribe` — download recording + Deepgram
 - `call.classify` — run Claude classification on transcript
 - `creative.generate` — generate ads from problem clusters
@@ -151,14 +140,10 @@ agency-tool/
 ├── app/                        # Next.js App Router
 │   ├── (auth)/                 # Login / signup
 │   ├── dashboard/              # Main layout
-│   │   ├── amazon/             # Module A UI
-│   │   ├── reddit/             # Module B UI
 │   │   ├── ads-intel/          # Module C UI
 │   │   ├── creative/           # Module D UI
 │   │   └── crm/                # Module E UI
 │   └── api/
-│       ├── amazon/
-│       ├── reddit/
 │       ├── creative/
 │       ├── crm/
 │       └── webhooks/
@@ -166,10 +151,9 @@ agency-tool/
 ├── lib/
 │   ├── ai/                     # Claude prompts + parsers
 │   ├── db/                     # Supabase client + queries
-│   ├── queue/                  # BullMQ job definitions + workers
-│   ├── twilio/                 # Twilio helpers
-│   ├── rainforest/             # Amazon API client
-│   └── reddit/                 # Reddit API client
+│   ├── queue/                  # BullMQ job definitions
+│   └── twilio/                 # Twilio helpers
+├── workers/                    # BullMQ worker processes
 ├── components/                 # Shared UI components
 ├── docs/                       # This folder
 └── supabase/
