@@ -17,7 +17,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user && pathname === '/login') {
-    return NextResponse.redirect(new URL('/dashboard/amazon', request.url))
+    return NextResponse.redirect(new URL('/dashboard/crm', request.url))
   }
 
   return response
