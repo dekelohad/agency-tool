@@ -15,11 +15,21 @@ export default async function DashboardLayout({
   if (!user) redirect('/login')
 
   return (
-    <div className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex h-screen overflow-hidden bg-[oklch(0.98_0.003_247)]">
       {/* Sidebar */}
-      <aside className="flex w-56 flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="flex h-14 items-center border-b border-zinc-200 px-4 dark:border-zinc-800">
-          <span className="text-sm font-semibold tracking-tight">Agency Tool</span>
+      <aside className="flex w-60 flex-col bg-[oklch(0.13_0.02_264)] shadow-xl">
+        {/* Logo */}
+        <div className="flex h-16 items-center gap-3 px-5 border-b border-white/8">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M2 8L6 4L10 8L14 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M2 12L6 8L10 12L14 8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.6"/>
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm font-bold text-white tracking-tight">AgencyTool</p>
+            <p className="text-[10px] text-white/40 font-medium uppercase tracking-widest">Pro</p>
+          </div>
         </div>
 
         <SidebarNav email={user.email ?? ''} />

@@ -9,11 +9,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
+import { Sparkles, Plus, Trash2, Copy, Check, ChevronDown, ChevronRight, History, Wand2 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -42,7 +41,7 @@ interface AdCreative {
   creative_briefs: { niche: string; target_audience: string } | null
 }
 
-// ─── Form ─────────────────────────────────────────────────────────────────────
+// ─── Form schema ──────────────────────────────────────────────────────────────
 
 const GenerateSchema = z.object({
   niche: z.string().min(1, 'Required'),
@@ -54,21 +53,40 @@ const GenerateSchema = z.object({
 
 type GenerateForm = z.infer<typeof GenerateSchema>
 
+// ─── Variant config ───────────────────────────────────────────────────────────
+
+const VARIANT_CONFIG: Record<string, { gradient: string; badge: string; label: string; icon: string }> = {
+  A: {
+    gradient: 'from-indigo-500 to-violet-600',
+    badge: 'bg-indigo-100 text-indigo-700',
+    label: 'Pain Angle',
+    icon: '🎯',
+  },
+  B: {
+    gradient: 'from-violet-500 to-purple-600',
+    badge: 'bg-violet-100 text-violet-700',
+    label: 'Curiosity Angle',
+    icon: '🔮',
+  },
+  C: {
+    gradient: 'from-emerald-500 to-teal-600',
+    badge: 'bg-emerald-100 text-emerald-700',
+    label: 'Social Proof',
+    icon: '⭐',
+  },
+}
+
 // ─── Ad card ─────────────────────────────────────────────────────────────────
 
 function AdCreativeCard({ ad }: { ad: AdCreative }) {
   const [showLanding, setShowLanding] = useState(false)
   const [copied, setCopied] = useState(false)
-
-  const variantColors: Record<string, string> = {
-    A: 'bg-blue-100 text-blue-800',
-    B: 'bg-purple-100 text-purple-800',
-    C: 'bg-emerald-100 text-emerald-800',
-  }
+  const variant = ad.ab_variant ?? 'A'
+  const cfg = VARIANT_CONFIG[variant] ?? VARIANT_CONFIG['A']
 
   function copyAd() {
     const text = [
-      `[Variant ${ad.ab_variant}] ${ad.format?.toUpperCase()} AD`,
+      `[Variant ${variant}] ${ad.format?.toUpperCase()} AD`,
       '',
       `Hook: ${ad.hook}`,
       '',
@@ -86,52 +104,59 @@ function AdCreativeCard({ ad }: { ad: AdCreative }) {
   }
 
   return (
-    <Card className="flex flex-col">
-      <CardHeader className="pb-2 pt-4">
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+      {/* Variant header */}
+      <div className={`bg-gradient-to-r ${cfg.gradient} px-5 py-4`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                variantColors[ad.ab_variant ?? ''] ?? 'bg-zinc-100 text-zinc-700'
-              }`}
-            >
-              {ad.ab_variant}
-            </span>
-            <Badge variant="outline" className="text-xs">
-              {ad.format}
-            </Badge>
+            <span className="text-lg">{cfg.icon}</span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-white">Variant {variant}</span>
+                <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+                  {ad.format}
+                </span>
+              </div>
+              <p className="text-xs text-white/70">{cfg.label}</p>
+            </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={copyAd} className="text-xs">
+          <button
+            onClick={copyAd}
+            className="flex items-center gap-1.5 rounded-lg bg-white/20 px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-white/30"
+          >
+            {copied ? <Check size={12} /> : <Copy size={12} />}
             {copied ? 'Copied!' : 'Copy'}
-          </Button>
+          </button>
         </div>
-      </CardHeader>
-      <CardContent className="flex-1 space-y-3 pb-4 text-sm">
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 space-y-4 p-5 text-sm">
         {ad.hook && (
           <div>
-            <p className="text-xs font-semibold uppercase text-zinc-400">Hook</p>
-            <p className="font-semibold text-zinc-900 dark:text-zinc-100">{ad.hook}</p>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-400">Hook</p>
+            <p className="text-base font-bold leading-snug text-slate-900">{ad.hook}</p>
           </div>
         )}
 
         {ad.primary_text && (
           <div>
-            <p className="text-xs font-semibold uppercase text-zinc-400">Primary Text</p>
-            <p className="text-zinc-700 dark:text-zinc-300">{ad.primary_text}</p>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-400">Primary Text</p>
+            <p className="leading-relaxed text-slate-600">{ad.primary_text}</p>
           </div>
         )}
 
-        <div className="flex gap-4">
+        <div className="flex items-start gap-4">
           {ad.headline && (
             <div className="flex-1">
-              <p className="text-xs font-semibold uppercase text-zinc-400">Headline</p>
-              <p className="font-medium">{ad.headline}</p>
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-400">Headline</p>
+              <p className="font-semibold text-slate-800">{ad.headline}</p>
             </div>
           )}
           {ad.cta && (
             <div>
-              <p className="text-xs font-semibold uppercase text-zinc-400">CTA</p>
-              <span className="rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white">
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-400">CTA</p>
+              <span className="inline-flex rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-indigo-200">
                 {ad.cta}
               </span>
             </div>
@@ -139,48 +164,58 @@ function AdCreativeCard({ ad }: { ad: AdCreative }) {
         </div>
 
         {ad.image_concept && (
-          <div className="rounded-md bg-zinc-50 p-3 dark:bg-zinc-900">
-            <p className="text-xs font-semibold uppercase text-zinc-400">Visual Concept</p>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400">{ad.image_concept}</p>
+          <div className="rounded-xl bg-slate-50 px-3.5 py-3">
+            <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-slate-400">Visual Concept</p>
+            <p className="text-xs leading-relaxed text-slate-600">{ad.image_concept}</p>
           </div>
         )}
 
         {ad.shot_list && ad.shot_list.length > 0 && (
           <div>
-            <p className="text-xs font-semibold uppercase text-zinc-400">Shot List</p>
-            <ol className="list-inside list-decimal space-y-0.5 text-xs text-zinc-500">
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-400">Shot List</p>
+            <ol className="space-y-1">
               {ad.shot_list.map((s, i) => (
-                <li key={i}>{s}</li>
+                <li key={i} className="flex items-start gap-2 text-xs text-slate-500">
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[9px] font-bold text-slate-500">
+                    {i + 1}
+                  </span>
+                  {s}
+                </li>
               ))}
             </ol>
           </div>
         )}
+      </div>
 
-        <Separator />
-
+      {/* Landing copy toggle */}
+      <div className="border-t border-slate-100 px-5 pb-4 pt-3">
         <button
           onClick={() => setShowLanding(!showLanding)}
-          className="w-full text-left text-xs font-semibold uppercase text-blue-600 hover:text-blue-700"
+          className="flex w-full items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
         >
-          {showLanding ? '▾' : '▸'} Landing Page Copy
+          {showLanding ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+          Landing Page Copy
         </button>
 
         {showLanding && ad.landing_copy && (
-          <div className="space-y-2 rounded-md border border-zinc-200 p-3 dark:border-zinc-800">
-            <p className="font-semibold">{ad.landing_copy.headline}</p>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">{ad.landing_copy.subhead}</p>
-            <ul className="list-inside list-disc space-y-1 text-sm">
+          <div className="mt-3 space-y-2 rounded-xl bg-indigo-50/60 p-4">
+            <p className="font-bold text-slate-900">{ad.landing_copy.headline}</p>
+            <p className="text-sm leading-relaxed text-slate-600">{ad.landing_copy.subhead}</p>
+            <ul className="space-y-1">
               {ad.landing_copy.bullets.map((b, i) => (
-                <li key={i}>{b}</li>
+                <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
+                  {b}
+                </li>
               ))}
             </ul>
-            <span className="inline-block rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white">
+            <span className="inline-flex rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white">
               {ad.landing_copy.cta}
             </span>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 
@@ -195,7 +230,6 @@ function GeneratedCreativesView({ briefId }: { briefId: string }) {
       return res.json()
     },
     refetchInterval: (query) => {
-      // Poll until ads are generated (worker is async)
       const data = query.state.data
       return data && data.length > 0 ? false : 3000
     },
@@ -203,11 +237,14 @@ function GeneratedCreativesView({ briefId }: { briefId: string }) {
 
   if (isLoading || ads.length === 0) {
     return (
-      <div className="space-y-3">
-        <p className="text-sm text-zinc-500">Generating creatives… this takes ~15 seconds.</p>
-        <div className="grid gap-3 md:grid-cols-3">
+      <div className="space-y-4">
+        <div className="flex items-center gap-3 rounded-2xl border border-indigo-100 bg-indigo-50 px-5 py-4">
+          <div className="h-2 w-2 animate-pulse rounded-full bg-indigo-500" />
+          <p className="text-sm font-medium text-indigo-700">Generating creatives… this takes ~15 seconds</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-80 w-full rounded-xl" />
+            <Skeleton key={i} className="h-96 w-full rounded-2xl" />
           ))}
         </div>
       </div>
@@ -215,9 +252,11 @@ function GeneratedCreativesView({ briefId }: { briefId: string }) {
   }
 
   return (
-    <div className="space-y-4">
-      <p className="text-sm font-medium text-zinc-600">{ads.length} ad variants generated</p>
-      <div className="grid gap-3 md:grid-cols-3">
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-slate-700">{ads.length} variants generated</p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
         {ads.map((ad) => (
           <AdCreativeCard key={ad.id} ad={ad} />
         ))}
@@ -238,20 +277,23 @@ function HistoryTab({ onSelect }: { onSelect: (briefId: string) => void }) {
     },
   })
 
-  // Group by brief_id
   const briefs = ads.reduce<Record<string, AdCreative[]>>((acc, ad) => {
     if (!acc[ad.brief_id]) acc[ad.brief_id] = []
     acc[ad.brief_id].push(ad)
     return acc
   }, {})
 
-  if (isLoading) return <Skeleton className="h-32 w-full" />
+  if (isLoading) return <Skeleton className="h-32 w-full rounded-2xl" />
 
   if (Object.keys(briefs).length === 0) {
     return (
-      <p className="rounded-lg border border-zinc-200 p-8 text-center text-sm text-zinc-500 dark:border-zinc-800">
-        No generated creatives yet.
-      </p>
+      <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 py-16 text-center">
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
+          <History size={22} className="text-slate-400" />
+        </div>
+        <p className="text-sm font-medium text-slate-600">No generated creatives yet</p>
+        <p className="mt-1 text-xs text-slate-400">Generate your first creative set to see history</p>
+      </div>
     )
   }
 
@@ -263,19 +305,25 @@ function HistoryTab({ onSelect }: { onSelect: (briefId: string) => void }) {
           <button
             key={briefId}
             onClick={() => onSelect(briefId)}
-            className="flex w-full items-center justify-between rounded-lg border border-zinc-200 p-3 text-left hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+            className="flex w-full items-center justify-between rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm transition-all hover:border-indigo-200 hover:shadow-md"
           >
-            <div>
-              <p className="text-sm font-medium">{first.creative_briefs?.niche ?? '—'}</p>
-              <p className="text-xs text-zinc-500">
-                {first.creative_briefs?.target_audience ?? ''}
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50">
+                <Sparkles size={15} className="text-indigo-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-800">{first.creative_briefs?.niche ?? '—'}</p>
+                <p className="text-xs text-slate-400">{first.creative_briefs?.target_audience ?? ''}</p>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-zinc-400">{briefAds.length} variants</span>
-              <span className="text-xs text-zinc-400">
+            <div className="flex items-center gap-3">
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                {briefAds.length} variants
+              </span>
+              <span className="text-xs text-slate-400">
                 {new Date(first.created_at).toLocaleDateString()}
               </span>
+              <ChevronRight size={14} className="text-slate-300" />
             </div>
           </button>
         )
@@ -327,108 +375,142 @@ export default function CreativePage() {
   })
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-lg font-semibold">Creative Factory</h1>
-        <p className="text-sm text-zinc-500">Generate ad creatives, copy, and A/B testing plans</p>
+    <div className="min-h-screen p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="mb-1 flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-100">
+            <Sparkles size={14} className="text-violet-600" />
+          </div>
+          <h1 className="text-xl font-bold text-slate-900">Creative Factory</h1>
+        </div>
+        <p className="text-sm text-slate-500">Generate ad creatives, copy, and A/B testing plans with AI</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="generate">Generate</TabsTrigger>
-          <TabsTrigger value="results" disabled={!activeBriefId}>
+        <TabsList className="mb-6 h-10 rounded-xl bg-slate-100 p-1">
+          <TabsTrigger value="generate" className="flex items-center gap-1.5 rounded-lg text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <Wand2 size={13} />
+            Generate
+          </TabsTrigger>
+          <TabsTrigger
+            value="results"
+            disabled={!activeBriefId}
+            className="flex items-center gap-1.5 rounded-lg text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            <Sparkles size={13} />
             Results
           </TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-1.5 rounded-lg text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <History size={13} />
+            History
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="generate" className="mt-4">
-          <form
-            onSubmit={handleSubmit((v) => generateMutation.mutate(v))}
-            className="max-w-xl space-y-4"
-          >
-            <div className="space-y-1.5">
-              <Label htmlFor="niche">Niche</Label>
-              <Input id="niche" placeholder="e.g. HVAC repair" {...register('niche')} />
-              {errors.niche && (
-                <p className="text-xs text-red-500">{errors.niche.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="target_audience">Target Audience</Label>
-              <Textarea
-                id="target_audience"
-                placeholder="e.g. Homeowners aged 35-65 in Miami with aging AC units"
-                {...register('target_audience')}
-                rows={2}
-              />
-              {errors.target_audience && (
-                <p className="text-xs text-red-500">{errors.target_audience.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Problem Clusters</Label>
-              <p className="text-xs text-zinc-500">
-                Enter the main problems your audience faces (one per line)
-              </p>
-              {fields.map((field, index) => (
-                <div key={field.id} className="flex gap-2">
+        {/* Generate tab */}
+        <TabsContent value="generate">
+          <div className="max-w-xl">
+            <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <form onSubmit={handleSubmit((v) => generateMutation.mutate(v))} className="space-y-5">
+                <div className="space-y-1.5">
+                  <Label htmlFor="niche" className="text-xs font-semibold text-slate-700">Niche</Label>
                   <Input
-                    placeholder={`Problem ${index + 1}`}
-                    {...register(`problem_clusters.${index}.value`)}
+                    id="niche"
+                    placeholder="e.g. HVAC repair"
+                    {...register('niche')}
+                    className="rounded-xl"
                   />
-                  {fields.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => remove(index)}
-                    >
-                      ×
-                    </Button>
+                  {errors.niche && <p className="text-xs text-red-500">{errors.niche.message}</p>}
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="target_audience" className="text-xs font-semibold text-slate-700">Target Audience</Label>
+                  <Textarea
+                    id="target_audience"
+                    placeholder="e.g. Homeowners aged 35-65 in Miami with aging AC units"
+                    {...register('target_audience')}
+                    rows={2}
+                    className="rounded-xl resize-none"
+                  />
+                  {errors.target_audience && (
+                    <p className="text-xs text-red-500">{errors.target_audience.message}</p>
                   )}
                 </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => append({ value: '' })}
-              >
-                + Add Problem
-              </Button>
-              {errors.problem_clusters && (
-                <p className="text-xs text-red-500">Add at least one problem cluster</p>
-              )}
+
+                <div className="space-y-2">
+                  <div>
+                    <Label className="text-xs font-semibold text-slate-700">Problem Clusters</Label>
+                    <p className="mt-0.5 text-xs text-slate-400">Main problems your audience faces</p>
+                  </div>
+                  <div className="space-y-2">
+                    {fields.map((field, index) => (
+                      <div key={field.id} className="flex gap-2">
+                        <Input
+                          placeholder={`Problem ${index + 1}`}
+                          {...register(`problem_clusters.${index}.value`)}
+                          className="rounded-xl"
+                        />
+                        {fields.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => remove(index)}
+                            className="rounded-xl px-3 text-slate-400 hover:text-red-500"
+                          >
+                            <Trash2 size={13} />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => append({ value: '' })}
+                    className="gap-1.5 rounded-xl text-slate-600"
+                  >
+                    <Plus size={13} />
+                    Add Problem
+                  </Button>
+                  {errors.problem_clusters && (
+                    <p className="text-xs text-red-500">Add at least one problem cluster</p>
+                  )}
+                </div>
+
+                <Separator />
+
+                <Button
+                  type="submit"
+                  disabled={generateMutation.isPending}
+                  className="w-full gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 py-5 text-sm font-semibold shadow-lg shadow-indigo-200 hover:from-indigo-700 hover:to-violet-700"
+                >
+                  <Sparkles size={16} />
+                  {generateMutation.isPending ? 'Submitting…' : 'Generate Creatives'}
+                </Button>
+
+                {generateMutation.isError && (
+                  <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                    Generation failed. Check your DeepSeek API key.
+                  </div>
+                )}
+              </form>
             </div>
-
-            <Button
-              type="submit"
-              disabled={generateMutation.isPending}
-              className="w-full"
-            >
-              {generateMutation.isPending ? 'Submitting…' : 'Generate Creatives'}
-            </Button>
-
-            {generateMutation.isError && (
-              <p className="text-sm text-red-500">
-                Generation failed. Check your Anthropic API key.
-              </p>
-            )}
-          </form>
+          </div>
         </TabsContent>
 
-        <TabsContent value="results" className="mt-4">
+        {/* Results tab */}
+        <TabsContent value="results">
           {activeBriefId ? (
             <GeneratedCreativesView briefId={activeBriefId} />
           ) : (
-            <p className="text-sm text-zinc-500">Generate creatives first.</p>
+            <p className="text-sm text-slate-500">Generate creatives first.</p>
           )}
         </TabsContent>
 
-        <TabsContent value="history" className="mt-4">
+        {/* History tab */}
+        <TabsContent value="history">
           <HistoryTab
             onSelect={(id) => {
               setActiveBriefId(id)
